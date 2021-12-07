@@ -7,6 +7,18 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from g2p_en import G2p
 import soundfile as sf
 import numpy as np
+import gdown
+
+def download_torchscript():
+    out_dir = Path(".") / "torchscript"
+    url = 'https://drive.google.com/uc?id=0B9P1L--7Wd2vNm9zMTJWOGxobkU'
+    print("Downloading acoustic model ...")
+    gdown.download("https://drive.google.com/file/d/1-145-USEQpM3pTU_Hzle7fmESu-xztEw/view?usp=sharing", out_dir / "acoustic_model.pt", quiet=False)
+    print("Downloading style predictor ...")
+    gdown.download("https://drive.google.com/file/d/1Vmm76LkPYxhG6Erjh5UV_FtaOesW54l0/view?usp=sharing", out_dir / "style_predictor.pt", quiet=False)
+    print("Downloading vocoder ...")
+    gdown.download("https://drive.google.com/file/d/1hNDVeCdumQsBIFCW48LjmjJxyF4YZHCy/view?usp=sharing", out_dir / "vocoder.pt", quiet=False)
+
 
 class DeepPoniesTTS():
     def __init__(self):
