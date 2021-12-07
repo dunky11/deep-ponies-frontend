@@ -7,3 +7,4 @@ Cython
 nemo_toolkit
 pynini==2.1.4
 gdown==4.2.0
+tqdm

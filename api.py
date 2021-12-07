@@ -9,6 +9,7 @@ from g2p_en import G2p
 import soundfile as sf
 import numpy as np
 import gdown
+from tqdm import tqdm
 
 def download_dependencies():
     nltk.download('punkt')
