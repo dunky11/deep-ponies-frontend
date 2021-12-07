@@ -45,14 +45,18 @@ class DeepPoniesTTS():
             symbol2id = json.load(json_file)
         return symbol2id
 
-    def synthesize(self, text: str, speaker_name: str, duration_control: float=1.0) -> np.ndarray:
+    def synthesize(self, text: str, speaker_name: str, duration_control: float=1.0, verbose: bool=True) -> np.ndarray:
         waves = []
         text = self.normalizer.normalize(text, verbose=False)
         text = text.strip()
         speaker_ids = torch.LongTensor([self.speaker2id[speaker_name]]) 
         if text[-1] not in [".", "?", "!"]:
             text = text + "."
-        for sentence in sent_tokenize(text):
+
+        sentences = sent_tokenize(text)
+        if verbose:
+            sentences = tqdm(sentences)
+        for sentence in sentences:
             encoding = self.tokenizer(
                 sentence,
                 add_special_tokens=True,
@@ -84,8 +88,3 @@ class DeepPoniesTTS():
                 waves.append(wave.view(-1))
         full_wave = torch.cat(waves, dim=0).cpu().numpy()
         return full_wave
-        
-if __name__ == "__main__":
-    tts = DeepPoniesTTS()
-    wave = tts.synthesize("Show me the way!", "Twilight Sparkle")
-    sf.write("out.wav", wave, 44100)
