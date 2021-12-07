@@ -2,6 +2,7 @@ import torch
 from transformers import AutoTokenizer
 from pathlib import Path
 import json
+import nltk
 from nemo_text_processing.text_normalization.normalize import Normalizer
 from nltk.tokenize import sent_tokenize, word_tokenize
 from g2p_en import G2p
@@ -9,7 +10,8 @@ import soundfile as sf
 import numpy as np
 import gdown
 
-def download_torchscript():
+def download_dependencies():
+    nltk.download('punkt')
     out_dir = Path(".") / "torchscript"
     gdown.download_folder("https://drive.google.com/drive/folders/1LVHA7L-qaPXuSgodxFQy3nrtsL5iqqiX?usp=sharing", use_cookies=False, output=str(out_dir))
 
