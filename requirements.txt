@@ -6,4 +6,4 @@ nltk==3.6.5
 Cython
 nemo_toolkit
 pynini==2.1.4
-gdown
+gdown==4.2.0
