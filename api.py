@@ -47,7 +47,7 @@ class DeepPoniesTTS():
             symbol2id = json.load(json_file)
         return symbol2id
 
-    def get_lexicon():
+    def get_lexicon(self):
         dic = {}
         with open(Path(".") / "assets" / "lexicon.txt", "r") as f:
             lines = f.readlines()
