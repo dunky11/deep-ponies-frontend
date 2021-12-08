@@ -26,6 +26,7 @@ class DeepPoniesTTS():
         self.normalizer = Normalizer(input_case='cased', lang='en')
         self.speaker2id = self.get_speaker2id()
         self.symbol2id = self.get_symbol2id()
+        self.lexicon = self.get_lexicon()
         self.acoustic_model.eval()
         self.style_predictor.eval()
         self.vocoder.eval()
@@ -46,9 +47,20 @@ class DeepPoniesTTS():
             symbol2id = json.load(json_file)
         return symbol2id
 
+    def get_lexicon():
+        dic = {}
+        with open(Path(".") / "assets" / "lexicon.txt", "r") as f:
+            lines = f.readlines()
+        for line in lines:
+            split = line.rstrip().split(" ")
+            text = split[0].strip()
+            phones = split[1:]
+            dic[text] = phones
+        return dic
+
     def synthesize(self, text: str, speaker_name: str, duration_control: float=1.0, verbose: bool=True) -> np.ndarray:
         waves = []
-        # text = self.normalizer.normalize(text, verbose=False)
+        text = self.normalizer.normalize(text, verbose=False)
         text = text.strip()
         speaker_ids = torch.LongTensor([self.speaker2id[speaker_name]]) 
         if text[-1] not in [".", "?", "!"]:
@@ -72,6 +84,9 @@ class DeepPoniesTTS():
                     phone_ids.append(self.symbol2id[word])
                 elif word in [",", ";"]:
                     phone_ids.append(self.symbol2id["@SILENCE"])
+                elif word in self.lexicon:
+                    for phone in self.lexicon[word]:
+                        phone_ids.append(self.symbol2id["@" + phone])
                 else:
                     for phone in self.g2p(word):
                         phone_ids.append(self.symbol2id["@" + phone])
