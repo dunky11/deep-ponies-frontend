@@ -48,7 +48,7 @@ class DeepPoniesTTS():
 
     def synthesize(self, text: str, speaker_name: str, duration_control: float=1.0, verbose: bool=True) -> np.ndarray:
         waves = []
-        text = self.normalizer.normalize(text, verbose=False)
+        # text = self.normalizer.normalize(text, verbose=False)
         text = text.strip()
         speaker_ids = torch.LongTensor([self.speaker2id[speaker_name]]) 
         if text[-1] not in [".", "?", "!"]:
