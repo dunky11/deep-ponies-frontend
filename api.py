@@ -80,6 +80,7 @@ class DeepPoniesTTS():
             attention_mask = encoding["attention_mask"]
             phone_ids = []
             for word in word_tokenize(sentence):
+                word = word.lower()
                 if word in [".", "?", "!"]:
                     phone_ids.append(self.symbol2id[word])
                 elif word in [",", ";"]:
