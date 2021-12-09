@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import nltk
 from nemo_text_processing.text_normalization.normalize import Normalizer
-from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.tokenize import sent_tokenize, TweetTokenizer
 from g2p_en import G2p
 import soundfile as sf
 import numpy as np
@@ -27,6 +27,7 @@ class DeepPoniesTTS():
         self.speaker2id = self.get_speaker2id()
         self.symbol2id = self.get_symbol2id()
         self.lexicon = self.get_lexicon()
+        self.word_tokenizer = TweetTokenizer()
         self.acoustic_model.eval()
         self.style_predictor.eval()
         self.vocoder.eval()
@@ -79,7 +80,7 @@ class DeepPoniesTTS():
             input_ids = encoding["input_ids"]
             attention_mask = encoding["attention_mask"]
             phone_ids = []
-            for word in word_tokenize(sentence):
+            for word in self.word_tokenizer.tokenize(sentence):
                 word = word.lower()
                 if word in [".", "?", "!"]:
                     phone_ids.append(self.symbol2id[word])
@@ -105,3 +106,9 @@ class DeepPoniesTTS():
                 waves.append(wave.view(-1))
         full_wave = torch.cat(waves, dim=0).cpu().numpy()
         return full_wave
+
+if __name__ == "__main__":
+    import soundfile as sf
+    tts = DeepPoniesTTS()
+    audio = tts.synthesize("Wouldn't that be great?", "Heavy")
+    sf.write("audio.wav", audio, 22050)
