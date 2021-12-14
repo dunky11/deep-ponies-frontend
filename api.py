@@ -10,11 +10,31 @@ import soundfile as sf
 import numpy as np
 import gdown
 from tqdm import tqdm
+import re
 
 def download_dependencies():
     nltk.download('punkt')
     out_dir = Path(".") / "torchscript"
     gdown.download_folder("https://drive.google.com/drive/folders/1LVHA7L-qaPXuSgodxFQy3nrtsL5iqqiX?usp=sharing", use_cookies=False, output=str(out_dir))
+
+def split_text(text):
+    splits = re.finditer(r"{{(([^}][^}]?|[^}]}?)*)}}", text)
+    out = []
+    start = 0
+    for split in splits:
+        non_arpa = text[start:split.start()]
+        arpa = text[split.start():split.end()]
+        out = out + [non_arpa] + [arpa]
+        start = split.end()
+    if start < len(text):
+        out.append(text[start:])
+    
+    return out
+
+def is_arpabet(text):
+    if len(text) < 4:
+        return False
+    return text[:2] == "{{" and text[-2:] == "}}" 
 
 class DeepPoniesTTS():
     def __init__(self):
@@ -61,7 +81,6 @@ class DeepPoniesTTS():
 
     def synthesize(self, text: str, speaker_name: str, duration_control: float=1.0, verbose: bool=True) -> np.ndarray:
         waves = []
-        text = self.normalizer.normalize(text, verbose=False)
         text = text.strip()
         speaker_ids = torch.LongTensor([self.speaker2id[speaker_name]]) 
         if text[-1] not in [".", "?", "!"]:
@@ -80,18 +99,25 @@ class DeepPoniesTTS():
             input_ids = encoding["input_ids"]
             attention_mask = encoding["attention_mask"]
             phone_ids = []
-            for word in self.word_tokenizer.tokenize(sentence):
-                word = word.lower()
-                if word in [".", "?", "!"]:
-                    phone_ids.append(self.symbol2id[word])
-                elif word in [",", ";"]:
-                    phone_ids.append(self.symbol2id["@SILENCE"])
-                elif word in self.lexicon:
-                    for phone in self.lexicon[word]:
-                        phone_ids.append(self.symbol2id["@" + phone])
+            for subsentence in split_text(sentence):
+                if is_arpabet(subsentence):
+                    for phone in subsentence.strip()[2:-2].split(" "):
+                        if "@" + phone in self.symbol2id:
+                            phone_ids.append(self.symbol2id["@" + phone])
                 else:
-                    for phone in self.g2p(word):
-                        phone_ids.append(self.symbol2id["@" + phone])
+                    subsentence = self.normalizer.normalize(subsentence, verbose=False)
+                    for word in self.word_tokenizer.tokenize(subsentence):
+                        word = word.lower()
+                        if word in [".", "?", "!"]:
+                            phone_ids.append(self.symbol2id[word])
+                        elif word in [",", ";"]:
+                            phone_ids.append(self.symbol2id["@SILENCE"])
+                        elif word in self.lexicon:
+                            for phone in self.lexicon[word]:
+                                phone_ids.append(self.symbol2id["@" + phone])
+                        else:
+                            for phone in self.g2p(word):
+                                phone_ids.append(self.symbol2id["@" + phone])
             phone_ids = torch.LongTensor([phone_ids])
             with torch.no_grad():
                 style = self.style_predictor(input_ids, attention_mask)
@@ -110,5 +136,5 @@ class DeepPoniesTTS():
 if __name__ == "__main__":
     import soundfile as sf
     tts = DeepPoniesTTS()
-    audio = tts.synthesize("Wouldn't that be great?", "Heavy")
+    audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}?", "Heavy")
     sf.write("audio.wav", audio, 22050)
