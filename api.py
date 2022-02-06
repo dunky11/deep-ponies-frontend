@@ -115,9 +115,12 @@ class DeepPoniesTTS():
                         elif word in self.lexicon:
                             for phone in self.lexicon[word]:
                                 phone_ids.append(self.symbol2id["@" + phone])
+                            phone_ids.append(self.symbol2id["@BLANK"])
                         else:
                             for phone in self.g2p(word):
                                 phone_ids.append(self.symbol2id["@" + phone])
+                            phone_ids.append(self.symbol2id["@BLANK"])
+            
             phone_ids = torch.LongTensor([phone_ids])
             with torch.no_grad():
                 style = self.style_predictor(input_ids, attention_mask)
@@ -127,8 +130,8 @@ class DeepPoniesTTS():
                     style,
                     1.0,
                     duration_control
-                )[0]
-                wave = self.vocoder(mels, speaker_ids)
+                )
+                wave = self.vocoder(mels, speaker_ids, torch.FloatTensor([1.0]))
                 waves.append(wave.view(-1))
         full_wave = torch.cat(waves, dim=0).cpu().numpy()
         return full_wave
