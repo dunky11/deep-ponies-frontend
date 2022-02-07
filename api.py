@@ -31,10 +31,7 @@ def split_arpabet(text):
     return out
 
 def split_context(text):
-    print("PRE")
-    print(text)
     splits = re.finditer(r"\[\[(([^\]][^\]]?|[^\]]\]?)*)\]\]", text)
-    print("POST")
     out = []
     start = 0
     """for split in splits:
@@ -128,7 +125,6 @@ class DeepPoniesTTS():
         for sentence in sentences:
             phone_ids = []
             subsentences_style = []
-            split_context(sentence)
             for subsentence in split_arpabet(sentence):
                 if is_arpabet(subsentence):
                     for phone in subsentence.strip()[2:-2].split(" "):
