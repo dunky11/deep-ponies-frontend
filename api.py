@@ -131,6 +131,7 @@ class DeepPoniesTTS():
                         if "@" + phone in self.symbol2id:
                             phone_ids.append(self.symbol2id["@" + phone])
                 else:
+                    print(subsentence)
                     subsentences_style.append(subsentence)
                     subsentence = self.normalizer.normalize(subsentence, verbose=False)
                     for word in self.word_tokenizer.tokenize(subsentence):
