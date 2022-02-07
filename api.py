@@ -36,6 +36,22 @@ def is_arpabet(text):
         return False
     return text[:2] == "{{" and text[-2:] == "}}" 
 
+def get_sentences(text):
+    sentences = sent_tokenize(text)
+    # ["What is this?", "?"] => ["What is this??"]
+    print(sentences)
+    merged_sentences = []
+    for i, sentence in enumerate(sentences):
+        if sentence in [".", "?", "!"]:
+            continue
+        for next_sentence in sentences[i + 1:]:
+            if next_sentence in [".", "?", "!"]:
+                sentence = sentence + next_sentence
+            else:
+                break
+        merged_sentences.append(sentence)
+    return merged_sentences
+
 class DeepPoniesTTS():
     def __init__(self):
         self.g2p = G2p()
@@ -86,7 +102,7 @@ class DeepPoniesTTS():
         if text[-1] not in [".", "?", "!"]:
             text = text + "."
 
-        sentences = sent_tokenize(text)
+        sentences = get_sentences(text)
         if verbose:
             sentences = tqdm(sentences)
         for sentence in sentences:
@@ -100,6 +116,7 @@ class DeepPoniesTTS():
             attention_mask = encoding["attention_mask"]
             phone_ids = []
             for subsentence in split_text(sentence):
+                print(subsentence)
                 if is_arpabet(subsentence):
                     for phone in subsentence.strip()[2:-2].split(" "):
                         if "@" + phone in self.symbol2id:
@@ -139,5 +156,6 @@ class DeepPoniesTTS():
 if __name__ == "__main__":
     import soundfile as sf
     tts = DeepPoniesTTS()
-    audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}?", "Heavy")
+    # audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}??", "Heavy")
+    audio = tts.synthesize("Wouldn't that be great!!", "Heavy")
     sf.write("audio.wav", audio, 22050)
