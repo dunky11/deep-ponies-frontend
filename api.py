@@ -39,7 +39,6 @@ def is_arpabet(text):
 def get_sentences(text):
     sentences = sent_tokenize(text)
     # ["What is this?", "?"] => ["What is this??"]
-    print(sentences)
     merged_sentences = []
     for i, sentence in enumerate(sentences):
         if sentence in [".", "?", "!"]:
@@ -106,22 +105,15 @@ class DeepPoniesTTS():
         if verbose:
             sentences = tqdm(sentences)
         for sentence in sentences:
-            encoding = self.tokenizer(
-                sentence,
-                add_special_tokens=True,
-                padding=True, 
-                return_tensors="pt"
-            )
-            input_ids = encoding["input_ids"]
-            attention_mask = encoding["attention_mask"]
             phone_ids = []
+            subsentences_style = []
             for subsentence in split_text(sentence):
-                print(subsentence)
                 if is_arpabet(subsentence):
                     for phone in subsentence.strip()[2:-2].split(" "):
                         if "@" + phone in self.symbol2id:
                             phone_ids.append(self.symbol2id["@" + phone])
                 else:
+                    subsentences_style.append(subsentence)
                     subsentence = self.normalizer.normalize(subsentence, verbose=False)
                     for word in self.word_tokenizer.tokenize(subsentence):
                         word = word.lower()
@@ -138,6 +130,15 @@ class DeepPoniesTTS():
                                 phone_ids.append(self.symbol2id["@" + phone])
                             phone_ids.append(self.symbol2id["@BLANK"])
             
+            subsentence_style = " ".join(subsentences_style)
+            encoding = self.tokenizer(
+                subsentence_style,
+                add_special_tokens=True,
+                padding=True, 
+                return_tensors="pt"
+            )
+            input_ids = encoding["input_ids"]
+            attention_mask = encoding["attention_mask"]
             phone_ids = torch.LongTensor([phone_ids])
             with torch.no_grad():
                 style = self.style_predictor(input_ids, attention_mask)
@@ -156,6 +157,6 @@ class DeepPoniesTTS():
 if __name__ == "__main__":
     import soundfile as sf
     tts = DeepPoniesTTS()
-    # audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}??", "Heavy")
-    audio = tts.synthesize("Wouldn't that be great!!", "Heavy")
+    audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}??", "Heavy")
+    # audio = tts.synthesize("Wouldn't that be great!!", "Heavy")
     sf.write("audio.wav", audio, 22050)
