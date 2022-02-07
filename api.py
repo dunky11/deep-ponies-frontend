@@ -145,7 +145,8 @@ class DeepPoniesTTS():
                             phone_ids.append(self.symbol2id["@BLANK"])
                         else:
                             for phone in self.g2p(word):
-                                phone_ids.append(self.symbol2id["@" + phone])
+                                if len(phone.strip()) != 0:
+                                    phone_ids.append(self.symbol2id["@" + phone])
                             phone_ids.append(self.symbol2id["@BLANK"])
             
             subsentence_style = " ".join(subsentences_style)
@@ -175,6 +176,6 @@ class DeepPoniesTTS():
 if __name__ == "__main__":
     import soundfile as sf
     tts = DeepPoniesTTS()
-    audio = tts.synthesize("[[Wouldn't that be great {{HH AA2 HH AA2}}. || Wouldn't that be great haha !!!]]", "Heavy")
+    audio = tts.synthesize("Wouldn't that be great!", "Heavy")
     # audio = tts.synthesize("Wouldn't that be great!!", "Heavy")
     sf.write("audio.wav", audio, 22050)
