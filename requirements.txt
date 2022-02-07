@@ -1,7 +1,6 @@
 torch==1.10.0
 transformers
 g2p_en==2.0.0
-numpy
 nltk==3.6.5
 Cython
 nemo_toolkit

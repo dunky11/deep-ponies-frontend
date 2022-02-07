@@ -17,7 +17,7 @@ def download_dependencies():
     out_dir = Path(".") / "torchscript"
     gdown.download_folder("https://drive.google.com/drive/folders/1LVHA7L-qaPXuSgodxFQy3nrtsL5iqqiX?usp=sharing", use_cookies=False, output=str(out_dir))
 
-def split_text(text):
+def split_arpabet(text):
     splits = re.finditer(r"{{(([^}][^}]?|[^}]}?)*)}}", text)
     out = []
     start = 0
@@ -28,13 +28,34 @@ def split_text(text):
         start = split.end()
     if start < len(text):
         out.append(text[start:])
-    
+    return out
+
+def split_context(text):
+    print("PRE")
+    print(text)
+    splits = re.finditer(r"\[\[(([^\]][^\]]?|[^\]]\]?)*)\]\]", text)
+    print("POST")
+    out = []
+    start = 0
+    """for split in splits:
+        print(split)
+        non_arpa = text[start:split.start()]
+        arpa = text[split.start():split.end()]
+        out = out + [non_arpa] + [arpa]
+        start = split.end()
+    if start < len(text):
+        out.append(text[start:])"""
     return out
 
 def is_arpabet(text):
     if len(text) < 4:
         return False
     return text[:2] == "{{" and text[-2:] == "}}" 
+
+def is_context(text):
+    if len(text) < 4:
+        return False
+    return text[:2] == "[[" and text[-2:] == "]]" 
 
 def get_sentences(text):
     sentences = sent_tokenize(text)
@@ -107,7 +128,8 @@ class DeepPoniesTTS():
         for sentence in sentences:
             phone_ids = []
             subsentences_style = []
-            for subsentence in split_text(sentence):
+            split_context(sentence)
+            for subsentence in split_arpabet(sentence):
                 if is_arpabet(subsentence):
                     for phone in subsentence.strip()[2:-2].split(" "):
                         if "@" + phone in self.symbol2id:
@@ -157,6 +179,6 @@ class DeepPoniesTTS():
 if __name__ == "__main__":
     import soundfile as sf
     tts = DeepPoniesTTS()
-    audio = tts.synthesize("Wouldn't that be great {{HH AA2 HH AA2}}??", "Heavy")
+    audio = tts.synthesize("[[Wouldn't that be great {{HH AA2 HH AA2}}. || Wouldn't that be great haha !!!]]", "Heavy")
     # audio = tts.synthesize("Wouldn't that be great!!", "Heavy")
     sf.write("audio.wav", audio, 22050)
