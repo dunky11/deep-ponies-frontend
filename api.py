@@ -134,6 +134,7 @@ class DeepPoniesTTS():
                     subsentences_style.append(subsentence)
                     subsentence = self.normalizer.normalize(subsentence, verbose=False)
                     print(len(subsentence))
+                    print([e for e in subsentence])
                     print(list(self.word_tokenizer.tokenize(subsentence)))
                     for word in self.word_tokenizer.tokenize(subsentence):
                         word = word.lower()
